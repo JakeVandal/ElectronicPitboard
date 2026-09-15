@@ -1,0 +1,42 @@
+name: Web App CI
+
+on:
+  push:
+    paths:
+      - 'webapp/**'
+      - '.github/workflows/webapp-ci.yml'
+  pull_request:
+    paths:
+      - 'webapp/**'
+      - '.github/workflows/webapp-ci.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate web app structure
+        run: |
+          test -f webapp/index.html
+          test -f webapp/app.js
+          test -f webapp/styles.css
+          test -f webapp/manifest.json
+
+      - name: Check JavaScript syntax
+        run: node --check webapp/app.js
+
+      - name: HTML validation smoke check
+        run: python3 - <<'PY'
+import pathlib
+html = pathlib.Path('webapp/index.html').read_text()
+assert '<html' in html.lower()
+assert 'manifest.json' in html
+print('web app files look valid')
+PY

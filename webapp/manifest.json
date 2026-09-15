@@ -1,0 +1,10 @@
+{
+  "name": "Smart Pitboard Control",
+  "short_name": "Pitboard",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0b1117",
+  "theme_color": "#0b1117",
+  "description": "Manual pitboard controller for the ESP32-S3 racing telemetry board.",
+  "icons": []
+}

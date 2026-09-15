@@ -1,0 +1,33 @@
+# PlatformIO and build outputs
+.pio/
+.vscode/
+*.pio
+*.log
+*.elf
+*.bin
+*.hex
+*.uf2
+*.map
+*.a
+*.o
+*.d
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+
+# Node/web assets
+node_modules/
+dist/
+coverage/
+
+# Secrets and local environment
+env.local
+.env
+*.key

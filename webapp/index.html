@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0d1117" />
+    <title>Smart Pitboard Control</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">MotoAmerica</p>
+          <h1>Pitboard Control</h1>
+        </div>
+        <button id="connectBtn" class="primary-btn">Connect BLE</button>
+      </header>
+
+      <section class="status-panel">
+        <div class="status-item">
+          <span>Mode</span>
+          <strong id="modeValue">Standby</strong>
+        </div>
+        <div class="status-item">
+          <span>Link</span>
+          <strong id="linkValue">Disconnected</strong>
+        </div>
+        <div class="status-item">
+          <span>Wi‑Fi</span>
+          <strong id="wifiValue">Offline</strong>
+        </div>
+      </section>
+
+      <section class="control-grid">
+        <button class="action-btn" data-mode="manual">Manual</button>
+        <button class="action-btn" data-mode="live">Live Timing</button>
+        <button class="action-btn" data-mode="standby">Standby</button>
+        <button class="action-btn" data-mode="fault">Fault</button>
+      </section>
+
+      <section class="message-panel">
+        <label for="messageInput">Pit message</label>
+        <input id="messageInput" type="text" maxlength="18" value="READY" />
+        <button id="sendMessageBtn" class="primary-btn">Send</button>
+      </section>
+
+      <section class="telemetry-panel">
+        <h2>Telemetry</h2>
+        <div class="telemetry-grid">
+          <div><span>Lap</span><strong id="lapValue">0</strong></div>
+          <div><span>Pos</span><strong id="positionValue">0</strong></div>
+          <div><span>Speed</span><strong id="speedValue">0 mph</strong></div>
+          <div><span>RPM</span><strong id="rpmValue">0</strong></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

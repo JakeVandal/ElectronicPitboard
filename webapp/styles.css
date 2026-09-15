@@ -1,0 +1,170 @@
+:root {
+  --bg: #0b1117;
+  --panel: #121b26;
+  --panel-alt: #172534;
+  --accent: #ffb703;
+  --accent-strong: #fb8500;
+  --text: #e8edf2;
+  --muted: #9aa7b3;
+  --good: #73d06c;
+  --danger: #ff5d73;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0b1117 0%, #111827 100%);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.app-shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 18px 56px;
+}
+
+.topbar,
+.status-panel,
+.control-grid,
+.message-panel,
+.telemetry-panel {
+  background: rgba(18, 27, 38, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25);
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+}
+
+.primary-btn,
+.action-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 0.9rem 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-btn {
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
+  color: #111827;
+}
+
+.status-panel {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 12px;
+  padding: 18px;
+}
+
+.status-item,
+.telemetry-grid > div {
+  background: var(--panel-alt);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.status-item span,
+.telemetry-grid span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.control-grid {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 12px;
+  padding: 18px;
+}
+
+.action-btn {
+  background: #1f2a36;
+  color: var(--text);
+}
+
+.action-btn:hover,
+.primary-btn:hover {
+  filter: brightness(1.08);
+}
+
+.message-panel {
+  margin-top: 20px;
+  padding: 18px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.message-panel label {
+  grid-column: 1 / -1;
+  font-weight: 700;
+}
+
+.message-panel input {
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: #0e1620;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.telemetry-panel {
+  margin-top: 20px;
+  padding: 18px;
+}
+
+.telemetry-panel h2 {
+  margin-top: 0;
+}
+
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 720px) {
+  .status-panel,
+  .control-grid,
+  .telemetry-grid,
+  .message-panel {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+}
