@@ -75,6 +75,24 @@ The combined launcher is:
 python run.py --mode all --port 8000
 ```
 
+### One-click VS Code launch
+
+Open this repository in VS Code and press `Ctrl+Shift+B`. The default build task runs `run.py --mode dev`, selects `.venv` or `venv` automatically, waits for `/api/session` to respond, starts the native PC app, and tears down both child processes when the task is stopped with `Ctrl+C` or the terminal stop button.
+
+To start the same supervisor from a terminal:
+
+```bash
+python3 run.py --mode dev --host 127.0.0.1 --port 8000
+```
+
+If port `8000` is occupied, choose another port consistently:
+
+```bash
+python3 run.py --mode dev --host 127.0.0.1 --port 8881
+```
+
+The optional `Launch Parallel Pitboard Stack` task starts the two services independently, but the managed `Launch Full Pitboard Stack` task is recommended because it performs the readiness check and owns teardown.
+
 ## BLE and web app workflow
 
 - The ESP32 exposes a GATT service for pit commands and operational status.
