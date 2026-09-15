@@ -91,6 +91,11 @@ If port `8000` is occupied, choose another port consistently:
 python3 run.py --mode dev --host 127.0.0.1 --port 8881
 ```
 
+or to kill any processes on port `8000`:
+```bash
+fuser -k 8000/tcp
+```
+
 The optional `Launch Parallel Pitboard Stack` task starts the two services independently, but the managed `Launch Full Pitboard Stack` task is recommended because it performs the readiness check and owns teardown.
 
 ## BLE and web app workflow
