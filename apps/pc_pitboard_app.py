@@ -2,13 +2,15 @@ from __future__ import annotations
 
 import asyncio
 import threading
-import tkinter as tk
-from tkinter import messagebox, ttk
 from typing import Any, Callable
 
-import customtkinter as ctk
+try:
+    import customtkinter as ctk
+except ModuleNotFoundError:
+    ctk = None  # type: ignore[assignment]
 import httpx
 from bleak import BleakClient, BleakScanner
+from bleak.exc import BleakError
 
 try:
     from apps.ui_components import COLORS, format_preview_rows
@@ -23,7 +25,7 @@ CHAR_CONTROL = "0000FFB4-0000-1000-8000-00805F9B34FB"
 API_URL = "http://127.0.0.1:8000"
 
 
-class NativePitboardApp(ctk.CTk):
+class NativePitboardApp((ctk.CTk if ctk is not None else object)):
     def __init__(self, api_url: str = API_URL) -> None:
         super().__init__()
         self.api_url = api_url.rstrip("/")
@@ -186,9 +188,33 @@ def main() -> None:
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--api", default=API_URL)
+    parser.add_argument("--scan-only", action="store_true", help="Scan BLE without opening the GUI")
     args = parser.parse_args()
+    if args.scan_only or ctk is None:
+        if ctk is None:
+            print("CustomTkinter/Tk is unavailable. Install the platform Tk package, then reinstall requirements.")
+            print("Linux: sudo apt install python3-tk, then recreate the venv with the matching system Python.")
+            print("Running native BLE scan fallback instead.")
+        asyncio.run(scan_only())
+        return
     app = NativePitboardApp(args.api)
     app.mainloop()
+
+
+async def scan_only() -> None:
+    print("Scanning for ESP32 pitboards using the native OS Bluetooth stack...")
+    try:
+        devices = await BleakScanner.discover(timeout=5.0)
+    except BleakError as error:
+        print(f"Bluetooth scan unavailable: {error}")
+        print("Enable Bluetooth and confirm the OS adapter is powered on.")
+        return
+    matches = [device for device in devices if "pitboard" in (device.name or "").lower() or "esp32" in (device.name or "").lower()]
+    if not matches:
+        print("No ESP32 pitboard found. Confirm power, advertising, and Bluetooth permissions.")
+        return
+    for device in matches:
+        print(f"{device.name or 'Unnamed'}: {device.address}")
 
 
 if __name__ == "__main__":

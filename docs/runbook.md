@@ -6,12 +6,15 @@ The timing source is `http://timing.motoamerica.com/timing_frame.php`. The Pytho
 
 ```bash
 cd /home/jake-vandal/Documents/ElectronicPitboard
+sudo apt install python3-tk
 python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 python -m pytest backend/test_scraper.py -q
 ```
+
+Keep this terminal activated for all Python commands below. If you start a new terminal, run `cd /home/jake-vandal/Documents/ElectronicPitboard && . .venv/bin/activate` first.
 
 Start the local API and PWA:
 
@@ -31,6 +34,23 @@ Start the native PC app in another terminal:
 ```bash
 . .venv/bin/activate
 python -m apps.pc_pitboard_app --api http://127.0.0.1:8000
+```
+
+The native GUI requires Tk bindings for the Python interpreter used by the virtual environment. If the venv uses a custom Python 3.14 build, recreate it with the system interpreter after installing `python3-tk`:
+
+```bash
+deactivate 2>/dev/null || true
+rm -rf .venv
+/usr/bin/python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m apps.pc_pitboard_app --api http://127.0.0.1:8000
+```
+
+Without a graphical desktop or Tk bindings, the module remains usable as a native BLE scanner:
+
+```bash
+python -m apps.pc_pitboard_app --scan-only
 ```
 
 Or launch the API and PC app together:
