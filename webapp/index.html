@@ -18,6 +18,11 @@
         <button id="connectBtn" class="primary-btn">Connect BLE</button>
       </header>
 
+      <div id="browserWarning" class="browser-warning hidden" role="alert" aria-live="polite">
+        <strong id="warningTitle">Browser compatibility check</strong>
+        <p id="warningDetails">Web Bluetooth is unavailable in this browser.</p>
+      </div>
+
       <section class="status-panel">
         <div class="status-item">
           <span>Mode</span>
@@ -30,6 +35,21 @@
         <div class="status-item">
           <span>Wi‑Fi</span>
           <strong id="wifiValue">Offline</strong>
+        </div>
+      </section>
+
+      <section class="rider-panel">
+        <div class="panel-header">
+          <h2>Rider selection</h2>
+        </div>
+        <div class="inline-controls">
+          <label for="activeRiderSelect">Active riders</label>
+          <select id="activeRiderSelect">
+            <option value="">Choose rider</option>
+          </select>
+          <label for="manualBikeInput">Manual bike</label>
+          <input id="manualBikeInput" type="number" min="1" max="999" value="21" inputmode="numeric" />
+          <button id="applyRiderBtn" class="secondary-btn">Apply</button>
         </div>
       </section>
 

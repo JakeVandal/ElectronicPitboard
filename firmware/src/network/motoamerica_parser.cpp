@@ -1,11 +1,22 @@
 #include "network/motoamerica_parser.h"
 
+#include <cctype>
 #include <cstring>
 #include <string>
 
 namespace pitboard {
 
 namespace {
+
+std::string trimHtmlToken(const std::string& text) {
+  const auto start = text.find_first_not_of(" \t\r\n><=");
+  if (start == std::string::npos) {
+    return "";
+  }
+
+  const auto end = text.find_last_not_of(" \t\r\n><=");
+  return text.substr(start, end - start + 1);
+}
 
 uint32_t parseServerLoad(const std::string& text) {
   const std::string marker = "server-load";
@@ -25,6 +36,32 @@ uint32_t parseServerLoad(const std::string& text) {
   }
 
   return value.empty() ? 0U : static_cast<uint32_t>(std::strtoul(value.c_str(), nullptr, 10));
+}
+
+bool parseBikeNumber(const std::string& cell, uint8_t& bikeNumber) {
+  std::string normalized = trimHtmlToken(cell);
+  const auto hashPos = normalized.find('#');
+  if (hashPos != std::string::npos) {
+    normalized = normalized.substr(hashPos + 1);
+  }
+
+  if (normalized.empty()) {
+    return false;
+  }
+
+  const auto start = normalized.find_first_of("0123456789");
+  if (start == std::string::npos) {
+    return false;
+  }
+
+  const auto end = normalized.find_first_not_of("0123456789", start);
+  std::string digits = normalized.substr(start, end == std::string::npos ? std::string::npos : end - start);
+  if (digits.empty()) {
+    return false;
+  }
+
+  bikeNumber = static_cast<uint8_t>(std::strtoul(digits.c_str(), nullptr, 10));
+  return bikeNumber > 0U;
 }
 
 bool findTrackedRiderRow(const std::string& text, uint8_t riderNumber, std::string& rowText) {
@@ -57,6 +94,26 @@ void MotoAmericaParser::setTrackedRider(uint8_t riderNumber) {
   trackedRiderNumber_ = riderNumber;
 }
 
+uint8_t MotoAmericaParser::trackedRiderNumber() const {
+  return trackedRiderNumber_;
+}
+
+const RiderInfo* MotoAmericaParser::activeRoster() const {
+  return activeRoster_;
+}
+
+size_t MotoAmericaParser::activeRosterCount() const {
+  return activeRosterCount_;
+}
+
+bool MotoAmericaParser::rosterDirty() const {
+  return rosterDirty_;
+}
+
+void MotoAmericaParser::clearRosterDirty() {
+  rosterDirty_ = false;
+}
+
 uint32_t MotoAmericaParser::computeRefreshPeriodMs(uint32_t serverLoad) const {
   if (serverLoad < 10U) {
     return 1000U;
@@ -65,6 +122,94 @@ uint32_t MotoAmericaParser::computeRefreshPeriodMs(uint32_t serverLoad) const {
     return serverLoad * 100U;
   }
   return 5000U;
+}
+
+bool MotoAmericaParser::parseActiveRoster(const std::string& text) {
+  memset(activeRoster_, 0, sizeof(activeRoster_));
+  activeRosterCount_ = 0U;
+  rosterDirty_ = false;
+
+  const auto countMarker = text.find("rider_count");
+  if (countMarker != std::string::npos) {
+    const auto valuePos = text.find_first_of("0123456789", countMarker);
+    if (valuePos != std::string::npos) {
+      std::string value;
+      size_t index = valuePos;
+      while (index < text.size() && std::isdigit(static_cast<unsigned char>(text[index]))) {
+        value.push_back(text[index]);
+        ++index;
+      }
+      if (!value.empty()) {
+        const uint32_t parsedCount = static_cast<uint32_t>(std::strtoul(value.c_str(), nullptr, 10));
+        if (parsedCount > 0U && parsedCount < kMaxActiveRoster) {
+          activeRosterCount_ = parsedCount;
+        }
+      }
+    }
+  }
+
+  size_t cursor = 0;
+  size_t parsedRows = 0U;
+  while (cursor < text.size() && parsedRows < kMaxActiveRoster) {
+    const auto rowPos = text.find("row_", cursor);
+    if (rowPos == std::string::npos) {
+      break;
+    }
+
+    const auto rowOpening = text.find('<', rowPos);
+    if (rowOpening == std::string::npos) {
+      break;
+    }
+
+    const auto rowEnd = text.find("</tr>", rowOpening);
+    if (rowEnd == std::string::npos) {
+      break;
+    }
+
+    const std::string rowText = text.substr(rowOpening, rowEnd - rowOpening + 5U);
+    std::string cellValues[4] = {"", "", "", ""};
+    size_t cellIndex = 0;
+    size_t cellCursor = 0;
+    while (cellIndex < 4U && cellCursor < rowText.size()) {
+      const auto cellStart = rowText.find("<td", cellCursor);
+      if (cellStart == std::string::npos) {
+        break;
+      }
+      const auto valueStart = rowText.find('>', cellStart);
+      if (valueStart == std::string::npos) {
+        break;
+      }
+      const auto valueEnd = rowText.find("</td>", valueStart + 1);
+      if (valueEnd == std::string::npos) {
+        break;
+      }
+
+      cellValues[cellIndex] = trimHtmlToken(rowText.substr(valueStart + 1, valueEnd - valueStart - 1));
+      cellCursor = valueEnd + 5U;
+      ++cellIndex;
+    }
+
+    uint8_t bikeNumber = 0U;
+    if (cellIndex >= 2U && parseBikeNumber(cellValues[0], bikeNumber)) {
+      RiderInfo rider{};
+      rider.bikeNumber = bikeNumber;
+      snprintf(rider.riderName, sizeof(rider.riderName), "%s", cellValues[1].empty() ? "Unknown" : cellValues[1].c_str());
+      rider.position = cellIndex >= 3U && !cellValues[2].empty() ? std::atoi(cellValues[2].c_str()) : 0;
+      snprintf(rider.lastLapText, sizeof(rider.lastLapText), "%s",
+               cellIndex >= 4U && !cellValues[3].empty() ? cellValues[3].c_str() : "-:--.-");
+      activeRoster_[parsedRows++] = rider;
+    }
+
+    cursor = rowEnd + 5U;
+  }
+
+  if (parsedRows > 0U) {
+    activeRosterCount_ = parsedRows;
+    rosterDirty_ = true;
+    return true;
+  }
+
+  return false;
 }
 
 bool MotoAmericaParser::parseChunk(const char* chunk, size_t length, TelemetryFrame& frame, bool& frameValid) {
@@ -82,10 +227,19 @@ bool MotoAmericaParser::parseChunk(const char* chunk, size_t length, TelemetryFr
     return false;
   }
 
+  parseActiveRoster(text);
+
   std::string rowText;
   if (!findTrackedRiderRow(text, trackedRiderNumber_, rowText)) {
-    frameValid = false;
-    return false;
+    if (activeRosterCount_ == 0U) {
+      frameValid = false;
+      return false;
+    }
+    frame.riderNumber = activeRoster_[0].bikeNumber;
+    frame.position = activeRoster_[0].position;
+    frame.connected = true;
+    frameValid = true;
+    return true;
   }
 
   const auto slashPos = rowText.find("/>");

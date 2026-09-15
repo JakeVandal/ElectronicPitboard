@@ -53,6 +53,13 @@ struct DisplayCommand {
   PitStatus status;
 };
 
+struct RiderInfo {
+  uint8_t bikeNumber = 0;
+  char riderName[32] = "";
+  int position = 0;
+  char lastLapText[16] = "";
+};
+
 struct SessionInfo {
   char trackName[32] = "Road Atlanta";
   char sessionType[16] = "Race";

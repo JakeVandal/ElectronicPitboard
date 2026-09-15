@@ -33,7 +33,9 @@ body {
 .control-grid,
 .quick-grid,
 .message-panel,
-.telemetry-panel {
+.telemetry-panel,
+.browser-warning,
+.rider-panel {
   background: rgba(9, 18, 13, 0.96);
   border: 1px solid rgba(126, 249, 163, 0.18);
   border-radius: 14px;
@@ -126,6 +128,64 @@ h1 {
   filter: brightness(1.08);
 }
 
+.browser-warning {
+  margin-top: 20px;
+  padding: 18px 20px;
+  border-left: 4px solid var(--warning);
+  color: var(--text);
+}
+
+.browser-warning.hidden {
+  display: none;
+}
+
+.browser-warning code {
+  color: var(--warning);
+  font-family: Consolas, monospace;
+}
+
+.rider-panel {
+  margin-top: 20px;
+  padding: 18px;
+}
+
+.panel-header h2 {
+  margin: 0 0 12px;
+  color: var(--accent);
+}
+
+.inline-controls {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.inline-controls label {
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.inline-controls select,
+.inline-controls input {
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid rgba(126, 249, 163, 0.2);
+  border-radius: 10px;
+  background: #030b08;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.secondary-btn {
+  border: 1px solid rgba(126, 249, 163, 0.28);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  background: #12261a;
+  color: var(--text);
+  cursor: pointer;
+}
+
 .message-panel {
   margin-top: 20px;
   padding: 18px;
@@ -170,8 +230,13 @@ h1 {
   .control-grid,
   .quick-grid,
   .telemetry-grid,
-  .message-panel {
+  .message-panel,
+  .inline-controls {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .inline-controls {
+    grid-template-columns: 1fr;
   }
 
   .topbar {
