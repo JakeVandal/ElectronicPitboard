@@ -73,3 +73,4 @@ async def index() -> FileResponse:
 
 
 app.mount("/static", StaticFiles(directory=WEBAPP_DIR), name="static")
+app.mount("/", StaticFiles(directory=WEBAPP_DIR, html=True), name="webapp")
