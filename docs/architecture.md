@@ -1,46 +1,50 @@
 # System Architecture
 
-## Overview
+## 1. Overview
 
-The Smart Pitboard is organized as a layered embedded system with a deterministic display pipeline, a network ingestion layer, and a BLE/web control plane. The design is built to be robust under racing conditions: reliable UI rendering, low-latency display updates, and graceful fallback when telemetry or BLE connectivity is lost.
+The Electronic Pitboard is a multi-display embedded system built around an ESP32-S3. It combines real-time race telemetry acquisition, human override via BLE, and a deterministic outdoor display pipeline for the pit lane. The architecture is intentionally split into independent tasks so that live timing, local UI rendering, and display refresh all remain responsive even during network instability.
 
-## Data flow
+## 2. FreeRTOS task breakdown
 
-1. The ESP32-S3 establishes Wi-Fi station mode and connects to the local race timing network.
-2. A lightweight HTTP client downloads timing frames or raw page fragments from the MotoAmerica timing endpoint.
-3. A parser extracts rider position, lap count, delta, and speed values.
-4. Parsed payloads are passed into a queue-based state update pipeline.
-5. The display manager updates the 7-segment wall, Hoysund TFT, and external telemetry LCD.
-6. The BLE service exposes manual override commands and current status to the pit crew web app.
+- `TaskSegments` (Core 1, Priority 3): refreshes the 18-digit display at a steady interval and writes the current row buffer to the hardware shift register chain.
+- `TaskTFT_UI` (Core 1, Priority 2): manages the local Hoysund TFT, LVGL tick update, touch events, and screen transitions.
+- `TaskNetwork` (Core 0, Priority 2): connects to Wi-Fi, polls the MotoAmerica timing feed, parses streaming data, and pushes structured telemetry to the display queue.
+- `TaskBLE` (Core 0, Priority 1): manages the BLE GATT service, receives manual pit commands, and updates status notifications.
 
-## State machine
+## 3. Inter-task queue structure
 
-The firmware runs a bounded state machine with three primary modes:
+- `g_segmentQueue`: display commands for the outdoor panel
+- `g_tftQueue`: UI state updates and touch-driven rendering tasks
+- `g_networkQueue`: parsed telemetry frames from the streaming scraper
+- `g_bleQueue`: override and mode-change events from the BLE control channel
+- `g_displayMutex`: protects the active display buffer when multiple tasks post updates
 
-- Manual: operator-controlled message or screen state, safe for pit-wall commands.
-- Live timing: race feed is active and the system is showing live telemetry.
-- Fault: degraded or invalid state where the system uses a fallback message and status indicators.
+This ensures that the segment display, local TFT, and telemetry pipelines do not corrupt each other during race conditions or rapid mode transitions.
 
-## Parser mechanics
+## 4. Runtime state machine
 
-The MotoAmerica data source is treated as an untrusted streaming endpoint. The parser should:
+The firmware supports four main operating states:
 
-- handle chunked or partial HTTP responses safely,
-- scan for known timing markers rather than assuming a perfectly structured document,
-- enforce buffer bounds and reject malformed payloads,
-- preserve the last-known-good telemetry to avoid flashing invalid values.
+- `Manual`: the pit crew has taken control through BLE, and the board is driven by operator-entered values.
+- `LiveTiming`: the MotoAmerica live feed is being parsed and the display reflects real race timing.
+- `Standby`: the display is idle, waiting for new data or a connection.
+- `Fault`: the board is in a degraded mode because the network stream is invalid or a hardware fault is present.
 
-## Display ownership
+The state is kept in the shared `PitStatus` structure and mirrored to the TFT and BLE status characteristics.
 
-The system splits responsibilities across multiple display owners:
+## 5. Data flow
 
-- Segment driver: low-level 7-segment rendering and multiplexing
-- Hoysund TFT: local UI, touch input, QR code, and on-board diagnostics
-- External telemetry display: high-contrast rider-facing data grid
+1. The ESP32-S3 boots and initializes all GPIO, UART, SPI, and BLE resources.
+2. `TaskNetwork` attempts Wi-Fi connection and HTTP polling to `timing_frame.php`.
+3. The streaming parser scans chunks for `#server-load`, `#invalid-status`, and rider row blocks.
+4. Structured telemetry is dispatched to the display queues once a valid rider row is identified.
+5. `TaskSegments` translates the active telemetry into ASCII / 7-segment output for rows 1–3.
+6. `TaskTFT_UI` shows tire-pressure or mode state, QR login code, and local status overlays.
+7. `TaskBLE` accepts human-written overrides and may override live feed mode when manual control is selected.
 
-## Failure handling
+## 6. Failure handling
 
-- Wi-Fi loss triggers retry logic without blocking the render loop.
-- Invalid timing frames are discarded and the last stable values remain visible.
-- BLE manual mode automatically overrides live data when operator input is active.
-- Displays gracefully degrade to a standby banner if power or communications are unavailable.
+- Lost Wi-Fi triggers reconnect attempts without blocking the display task.
+- Partial or malformed HTTP payloads are discarded instead of corrupting the current board buffer.
+- Manual override takes precedence over live timing once BLE mode is selected.
+- When telemetry is stale or invalid, the board falls back to the last known-good values and a bright warning message.

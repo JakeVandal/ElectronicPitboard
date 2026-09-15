@@ -1,12 +1,12 @@
 :root {
-  --bg: #0b1117;
-  --panel: #121b26;
-  --panel-alt: #172534;
-  --accent: #ffb703;
-  --accent-strong: #fb8500;
-  --text: #e8edf2;
-  --muted: #9aa7b3;
-  --good: #73d06c;
+  --bg: #000000;
+  --panel: #09120d;
+  --panel-alt: #112118;
+  --accent: #7ef9a3;
+  --accent-strong: #48d58a;
+  --warning: #ffce5c;
+  --text: #e8fff2;
+  --muted: #93bca4;
   --danger: #ff5d73;
 }
 
@@ -17,7 +17,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: linear-gradient(180deg, #0b1117 0%, #111827 100%);
+  background: #000;
   color: var(--text);
   font-family: Arial, Helvetica, sans-serif;
 }
@@ -31,12 +31,13 @@ body {
 .topbar,
 .status-panel,
 .control-grid,
+.quick-grid,
 .message-panel,
 .telemetry-panel {
-  background: rgba(18, 27, 38, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(9, 18, 13, 0.96);
+  border: 1px solid rgba(126, 249, 163, 0.18);
   border-radius: 14px;
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.4);
 }
 
 .topbar {
@@ -57,20 +58,23 @@ body {
 h1 {
   margin: 0;
   font-size: clamp(1.8rem, 3vw, 2.6rem);
+  color: var(--accent);
 }
 
 .primary-btn,
-.action-btn {
-  border: none;
+.action-btn,
+.quick-btn {
+  border: 1px solid rgba(126, 249, 163, 0.28);
   border-radius: 10px;
   padding: 0.9rem 1.2rem;
   font-weight: 700;
   cursor: pointer;
+  color: var(--text);
 }
 
 .primary-btn {
   background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
-  color: #111827;
+  color: #04110a;
 }
 
 .status-panel {
@@ -98,7 +102,8 @@ h1 {
   text-transform: uppercase;
 }
 
-.control-grid {
+.control-grid,
+.quick-grid {
   margin-top: 20px;
   display: grid;
   grid-template-columns: repeat(4, minmax(120px, 1fr));
@@ -106,12 +111,17 @@ h1 {
   padding: 18px;
 }
 
-.action-btn {
-  background: #1f2a36;
-  color: var(--text);
+.quick-grid {
+  grid-template-columns: repeat(4, minmax(100px, 1fr));
+}
+
+.action-btn,
+.quick-btn {
+  background: #0e1d15;
 }
 
 .action-btn:hover,
+.quick-btn:hover,
 .primary-btn:hover {
   filter: brightness(1.08);
 }
@@ -132,9 +142,9 @@ h1 {
 
 .message-panel input {
   padding: 0.9rem 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(126, 249, 163, 0.2);
   border-radius: 10px;
-  background: #0e1620;
+  background: #030b08;
   color: var(--text);
   font-size: 1rem;
 }
@@ -146,6 +156,7 @@ h1 {
 
 .telemetry-panel h2 {
   margin-top: 0;
+  color: var(--accent);
 }
 
 .telemetry-grid {
@@ -157,6 +168,7 @@ h1 {
 @media (max-width: 720px) {
   .status-panel,
   .control-grid,
+  .quick-grid,
   .telemetry-grid,
   .message-panel {
     grid-template-columns: 1fr 1fr;

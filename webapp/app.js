@@ -1,6 +1,7 @@
 const connectBtn = document.getElementById('connectBtn');
 const sendMessageBtn = document.getElementById('sendMessageBtn');
 const actionButtons = document.querySelectorAll('.action-btn');
+const quickButtons = document.querySelectorAll('.quick-btn');
 const messageInput = document.getElementById('messageInput');
 
 const modeValue = document.getElementById('modeValue');
@@ -22,14 +23,15 @@ async function connectBle() {
 
   try {
     device = await navigator.bluetooth.requestDevice({
-      filters: [{ services: ['6b6f7462-6f61-7264-0001'] }],
+      filters: [{ services: ['0000FFB0-0000-1000-8000-00805F9B34FB'] }],
     });
 
     const server = await device.gatt.connect();
-    const service = await server.getPrimaryService('6b6f7462-6f61-7264-0001');
-    characteristic = await service.getCharacteristic('6b6f7462-6f61-7264-0002');
+    const service = await server.getPrimaryService('0000FFB0-0000-1000-8000-00805F9B34FB');
+    characteristic = await service.getCharacteristic('0000FFB1-0000-1000-8000-00805F9B34FB');
     linkValue.textContent = 'Connected';
     modeValue.textContent = 'Manual';
+    wifiValue.textContent = 'BLE';
   } catch (error) {
     console.error(error);
     linkValue.textContent = 'Failed';
@@ -47,10 +49,19 @@ async function sendMessage() {
 }
 
 function setMode(mode) {
-  modeValue.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+  const normalized = mode.charAt(0).toUpperCase() + mode.slice(1);
+  modeValue.textContent = normalized;
   if (mode === 'live') {
     wifiValue.textContent = 'Online';
   }
+  if (mode === 'manual') {
+    wifiValue.textContent = 'BLE';
+  }
+}
+
+function applyQuickAction(action) {
+  messageInput.value = action;
+  sendMessage();
 }
 
 connectBtn.addEventListener('click', connectBle);
@@ -58,6 +69,10 @@ sendMessageBtn.addEventListener('click', sendMessage);
 
 actionButtons.forEach((button) => {
   button.addEventListener('click', () => setMode(button.dataset.mode));
+});
+
+quickButtons.forEach((button) => {
+  button.addEventListener('click', () => applyQuickAction(button.dataset.action));
 });
 
 lapValue.textContent = '8';

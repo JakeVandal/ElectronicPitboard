@@ -33,6 +33,8 @@ struct TelemetryFrame {
   float deltaSeconds = 0.0f;
   float lastLapSeconds = 0.0f;
   bool connected = false;
+  uint8_t riderNumber = 0;
+  char lastLapText[16] = {0};
 };
 
 struct PitStatus {
@@ -41,6 +43,7 @@ struct PitStatus {
   bool bleConnected = false;
   bool displayActive = true;
   uint8_t batteryPercent = 100;
+  int rssiDbm = -90;
 };
 
 struct DisplayCommand {
@@ -48,6 +51,13 @@ struct DisplayCommand {
   SegmentLine line;
   TelemetryFrame telemetry;
   PitStatus status;
+};
+
+struct SessionInfo {
+  char trackName[32] = "Road Atlanta";
+  char sessionType[16] = "Race";
+  uint32_t elapsedMs = 0;
+  uint8_t riderCount = 0;
 };
 
 }  // namespace pitboard

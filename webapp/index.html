@@ -46,6 +46,17 @@
         <button id="sendMessageBtn" class="primary-btn">Send</button>
       </section>
 
+      <section class="quick-grid" aria-label="Quick pit actions">
+        <button class="quick-btn" data-action="BOX NOW">BOX NOW</button>
+        <button class="quick-btn" data-action="PUSH">PUSH</button>
+        <button class="quick-btn" data-action="P-IN">P-IN</button>
+        <button class="quick-btn" data-action="FUEL">FUEL</button>
+        <button class="quick-btn" data-action="+0.5">+0.5</button>
+        <button class="quick-btn" data-action="-0.5">-0.5</button>
+        <button class="quick-btn" data-action="L1">L1</button>
+        <button class="quick-btn" data-action="L2">L2</button>
+      </section>
+
       <section class="telemetry-panel">
         <h2>Telemetry</h2>
         <div class="telemetry-grid">
@@ -58,5 +69,12 @@
     </main>
 
     <script src="app.js"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').catch((err) => console.error('SW registration failed', err));
+        });
+      }
+    </script>
   </body>
 </html>
