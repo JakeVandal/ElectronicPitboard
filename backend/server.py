@@ -74,3 +74,16 @@ async def index() -> FileResponse:
 
 app.mount("/static", StaticFiles(directory=WEBAPP_DIR), name="static")
 app.mount("/", StaticFiles(directory=WEBAPP_DIR, html=True), name="webapp")
+
+
+if __name__ == "__main__":
+    import argparse
+    import uvicorn
+
+    parser = argparse.ArgumentParser(description="Run the pitboard timing API")
+    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--ssl-cert")
+    parser.add_argument("--ssl-key")
+    args = parser.parse_args()
+    uvicorn.run("backend.server:app", host=args.host, port=args.port, ssl_certfile=args.ssl_cert, ssl_keyfile=args.ssl_key)

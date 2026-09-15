@@ -25,19 +25,34 @@ def run(cmd: list[str]) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run the pitboard timing service")
+    parser.add_argument("--mode", choices=("server", "pc-app", "all"), default="server")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--ssl", action="store_true", help="Serve over HTTPS with a local self-signed certificate")
     args = parser.parse_args()
 
+    if args.mode == "pc-app":
+        run([python_executable(), "-m", "apps.pc_pitboard_app", "--api", f"http://127.0.0.1:{args.port}"])
+        return 0
+
+    if args.mode == "all":
+        server = subprocess.Popen(
+            [python_executable(), "-m", "uvicorn", "backend.server:app", "--host", args.host, "--port", str(args.port)],
+            cwd=str(ROOT),
+        )
+        try:
+            run([python_executable(), "-m", "apps.pc_pitboard_app", "--api", f"http://127.0.0.1:{args.port}"])
+        finally:
+            server.terminate()
+            server.wait()
+        return 0
+
     if args.ssl:
-        cert = ROOT / "localhost.pem"
-        key = ROOT / "localhost-key.pem"
+        cert = ROOT / "backend" / "certs" / "cert.pem"
+        key = ROOT / "backend" / "certs" / "key.pem"
         if not cert.exists() or not key.exists():
-            print("Creating temporary localhost certificate...")
-            run(["mkcert", "localhost", "127.0.0.1", "::1"])
-            cert = ROOT / "localhost.pem"
-            key = ROOT / "localhost-key.pem"
+            print("Creating local HTTPS certificate...")
+            run([python_executable(), "-m", "backend.generate_cert", "--output", str(cert.parent), "--host", "localhost", "--host", "127.0.0.1"])
         run([
             python_executable(),
             "-m",

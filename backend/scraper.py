@@ -110,15 +110,46 @@ def parse_race_html(html: str) -> dict[str, Any]:
 
 async def fetch_timing_frame(url: str = TIMING_URL) -> dict[str, Any]:
     async with httpx.AsyncClient(timeout=15.0) as client:
-        response = await client.get(url)
+        response = await client.post(url)
         response.raise_for_status()
         return parse_race_html(response.text)
 
 
+def refresh_interval_seconds(server_load: int) -> float:
+    """Throttle polling from one to five seconds as server load rises."""
+    load = max(0, min(100, int(server_load)))
+    return 1.0 + (load / 100.0) * 4.0
+
+
+class TimingEngine:
+    def __init__(self, url: str = TIMING_URL) -> None:
+        self.url = url
+        self.data: dict[str, Any] = {"server_load": 0, "sector_count": 0, "riders": []}
+
+    async def refresh(self) -> dict[str, Any]:
+        self.data = await fetch_timing_frame(self.url)
+        return self.data
+
+    async def get_active_roster(self) -> list[dict[str, Any]]:
+        return list(self.data.get("riders", []))
+
+    async def get_rider_telemetry(self, bike_number: int) -> dict[str, Any] | None:
+        for rider in self.get_active_roster():
+            if rider.get("bike_number") == int(bike_number):
+                return rider
+        return None
+
+    async def run(self) -> None:
+        while True:
+            try:
+                await self.refresh()
+            except (httpx.HTTPError, ValueError):
+                pass
+            await asyncio.sleep(refresh_interval_seconds(self.data.get("server_load", 0)))
+
+
 async def poll_timing() -> None:
-    while True:
-        await fetch_timing_frame()
-        await asyncio.sleep(1)
+    await TimingEngine().run()
 
 
 if __name__ == "__main__":
